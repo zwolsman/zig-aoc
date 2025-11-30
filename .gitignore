@@ -22,4 +22,4 @@ zig-out/
 zig-cache/
 
 # Requested by the creator of the advent of code to not share the input
-input.txt
+inputs

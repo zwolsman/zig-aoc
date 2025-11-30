@@ -7,7 +7,7 @@ pub const solution: Solution = .{
 };
 
 fn part1(allocator: std.mem.Allocator) !void {
-    var handle = try std.fs.cwd().openFileZ("./src/day01/input.txt", .{ .mode = .read_only });
+    var handle = try std.fs.cwd().openFileZ("./inputs/day1.txt", .{ .mode = .read_only });
     defer handle.close();
 
     var in = handle.reader(&.{});

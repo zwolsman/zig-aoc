@@ -37,7 +37,7 @@ pub const Solution = struct {
 
 // TOOD: can I make this comptime?
 const solutions = [_]Solution{
-    @import("day01/solution.zig").solution,
+    @import("solutions/day1.zig").solution,
 };
 
 pub fn main() !void {
