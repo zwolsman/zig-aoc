@@ -1,0 +1,69 @@
+const std = @import("std");
+
+const flags = @import("flags");
+
+pub const Solution = struct {
+    part1Fn: ?*const fn (std.mem.Allocator) anyerror!void = null,
+    part2Fn: ?*const fn (std.mem.Allocator) anyerror!void = null,
+
+    fn part1(self: *const Solution, allocator: std.mem.Allocator) !void {
+        if (self.part1Fn) |callback| {
+            std.log.info("Running part 1", .{});
+            try callback(allocator);
+        } else {
+            std.log.info("Skipping part 2", .{});
+        }
+    }
+
+    fn part2(self: *const Solution, allocator: std.mem.Allocator) !void {
+        if (self.part2Fn) |callback| {
+            std.log.info("Running part 2", .{});
+            try callback(allocator);
+        } else {
+            std.log.info("Skipping part 2", .{});
+        }
+    }
+
+    fn run(self: *const Solution, allocator: std.mem.Allocator) void {
+        self.part1(allocator) catch |err| {
+            std.log.warn("Failed to run part 1: {}", .{err});
+        };
+
+        self.part2(allocator) catch |err| {
+            std.log.warn("Failed to run part 2: {}", .{err});
+        };
+    }
+};
+
+// TOOD: can I make this comptime?
+const solutions = [_]Solution{
+    @import("day01/solution.zig").solution,
+};
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    const allocator = gpa.allocator();
+
+    const raw_args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, raw_args);
+    const args = flags.parse(raw_args, "aoc", struct {
+        day: ?u8,
+        pub const switches = .{
+            .day = 'd',
+        };
+    }, .{});
+
+    if (args.day) |day| {
+        if (day < 1 or day > solutions.len) return error.InvalidDay;
+
+        std.log.info("Running day {d}", .{day});
+        solutions[day - 1].run(allocator);
+    } else {
+        for (0.., solutions) |day, s| {
+            std.log.debug("Running day {d}", .{day + 1});
+            s.run(allocator);
+        }
+    }
+}
