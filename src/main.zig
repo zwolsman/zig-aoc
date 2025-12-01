@@ -33,6 +33,7 @@ pub const Solution = struct {
         const p1_duration = timer.lap();
         std.log.debug("part 1 took {D}", .{p1_duration});
 
+        timer.reset();
         self.part2(allocator) catch |err| {
             std.log.warn("Failed to run part 2: {}", .{err});
         };
@@ -45,6 +46,7 @@ pub const Solution = struct {
 // TOOD: can I make this comptime?
 const solutions = [_]Solution{
     @import("solutions/day1.zig").solution,
+    @import("solutions/day2.zig").solution,
 };
 
 pub fn main() !void {
