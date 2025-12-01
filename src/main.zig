@@ -25,13 +25,20 @@ pub const Solution = struct {
     }
 
     fn run(self: *const Solution, allocator: std.mem.Allocator) void {
+        var timer = std.time.Timer.start() catch unreachable;
         self.part1(allocator) catch |err| {
             std.log.warn("Failed to run part 1: {}", .{err});
         };
 
+        const p1_duration = timer.lap();
+        std.log.debug("part 1 took {D}", .{p1_duration});
+
         self.part2(allocator) catch |err| {
             std.log.warn("Failed to run part 2: {}", .{err});
         };
+
+        const p2_duration = timer.lap();
+        std.log.debug("part 2 took {D}", .{p2_duration});
     }
 };
 
