@@ -31,7 +31,7 @@ pub const Solution = struct {
         };
 
         const p1_duration = timer.lap();
-        std.log.debug("part 1 took {D}", .{p1_duration});
+        std.log.info("part 1 took {D}", .{p1_duration});
 
         timer.reset();
         self.part2(allocator) catch |err| {
@@ -39,7 +39,7 @@ pub const Solution = struct {
         };
 
         const p2_duration = timer.lap();
-        std.log.debug("part 2 took {D}", .{p2_duration});
+        std.log.info("part 2 took {D}", .{p2_duration});
     }
 };
 

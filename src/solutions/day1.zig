@@ -33,7 +33,7 @@ fn part1(allocator: std.mem.Allocator) !void {
             result += 1;
     }
 
-    std.log.debug("{d}", .{result});
+    std.log.info("{d}", .{result});
 }
 
 fn part2(allocator: std.mem.Allocator) !void {
@@ -73,5 +73,5 @@ fn part2(allocator: std.mem.Allocator) !void {
             result += 1;
     }
 
-    std.log.debug("{d}", .{result});
+    std.log.info("{d}", .{result});
 }

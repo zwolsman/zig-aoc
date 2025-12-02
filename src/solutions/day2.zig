@@ -27,7 +27,7 @@ fn part1(allocator: std.mem.Allocator) !void {
     var in = handle.reader(&buff);
 
     const sum = runValidation(&in.interface, Validator.isValid);
-    std.log.debug("{d}", .{sum});
+    std.log.info("{d}", .{sum});
 }
 
 fn part2(allocator: std.mem.Allocator) !void {
@@ -63,7 +63,7 @@ fn part2(allocator: std.mem.Allocator) !void {
     var in = handle.reader(&buff);
 
     const sum = runValidation(&in.interface, Validator.isValid);
-    std.log.debug("{d}", .{sum});
+    std.log.info("{d}", .{sum});
 }
 
 fn runValidation(in: *std.Io.Reader, isValidFn: *const fn (u64) bool) u64 {
