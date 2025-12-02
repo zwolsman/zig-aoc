@@ -49,4 +49,59 @@ fn isValid(n: u64) bool {
 
 fn part2(allocator: std.mem.Allocator) !void {
     _ = allocator;
+    var handle = try std.fs.cwd().openFileZ("./inputs/day2.txt", .{ .mode = .read_only });
+    defer handle.close();
+    var buff: [128]u8 = undefined;
+    var in = handle.reader(&buff);
+
+    var sum: usize = 0;
+    while (true) {
+        const range = in.interface.takeDelimiterExclusive(',') catch |err| {
+            switch (err) {
+                error.EndOfStream => break,
+                else => return err,
+            }
+        };
+
+        var it = std.mem.splitScalar(u8, range, '-');
+        const start = try std.fmt.parseInt(u64, it.next().?, 10);
+        const end = try std.fmt.parseInt(u64, it.next().?, 10);
+        std.debug.assert(it.next() == null);
+
+        for (start..end + 1) |product_id| {
+            if (!isValid2(product_id)) {
+                sum += product_id;
+            }
+        }
+    }
+    std.log.debug("{d}", .{sum});
+}
+
+fn isValid2(n: u64) bool {
+    var buff: [64]u8 = undefined;
+    const str = std.fmt.bufPrint(&buff, "{d}", .{n}) catch unreachable;
+    for (1..str.len) |i| next_pattern: {
+        const pattern = str[0..i];
+        if (@rem(str.len, pattern.len) != 0)
+            continue;
+
+        var k = i;
+
+        while (k <= str.len - pattern.len) {
+            const part = str[k .. k + pattern.len];
+
+            if (!std.mem.eql(u8, pattern, part)) {
+                break :next_pattern;
+            }
+            k += pattern.len;
+        }
+        return false;
+    }
+    return true;
+}
+
+test "part 2" {
+    for ([_]usize{ 12341234, 123123123, 1212121212, 1111111, 1188511885 }) |value| {
+        std.testing.expect(!isValid2(value));
+    }
 }
