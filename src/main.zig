@@ -47,6 +47,7 @@ pub const Solution = struct {
 const solutions = [_]Solution{
     @import("solutions/day1.zig").solution,
     @import("solutions/day2.zig").solution,
+    @import("solutions/day3.zig").solution,
 };
 
 pub fn main() !void {
