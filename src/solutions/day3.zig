@@ -23,16 +23,13 @@ fn part1(allocator: std.mem.Allocator) !void {
             }
         };
 
-        var max_joltage: usize = 0;
-        for (0.., bank[0 .. bank.len - 1]) |i, battery_1| {
-            for (bank[i + 1 .. bank.len]) |battery_2| {
-                const joltage = (battery_1 - '0') * 10 + (battery_2 - '0');
-                if (joltage > max_joltage) {
-                    max_joltage = joltage;
-                }
-            }
-        }
+        var battery_buff: [2]u8 = undefined;
+        solve(&battery_buff, bank);
 
+        var max_joltage: usize = 0;
+        for (0.., battery_buff) |i, battery| {
+            max_joltage += (battery - '0') * std.math.pow(usize, 10, battery_buff.len - i - 1);
+        }
         output_joltage += max_joltage;
     }
     std.log.info("{d}", .{output_joltage});
