@@ -37,7 +37,7 @@ fn part1(allocator: std.mem.Allocator) !void {
 
 fn part2(allocator: std.mem.Allocator) !void {
     _ = allocator;
-    var handle = try std.fs.cwd().openFileZ("/Users/mzwolsman/Developer/zig-aoc/inputs/day3.txt", .{ .mode = .read_only });
+    var handle = try std.fs.cwd().openFileZ("./inputs/day3.txt", .{ .mode = .read_only });
     defer handle.close();
     var buff: [128]u8 = undefined;
     var in = handle.reader(&buff);
