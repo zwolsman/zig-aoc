@@ -20,37 +20,13 @@ fn part1(allocator: std.mem.Allocator) !void {
 
     const grid = try std.mem.replaceOwned(u8, allocator, raw_grid, "\n", "");
     defer allocator.free(grid);
+
+    const result = try allocator.alloc(u8, grid.len);
+    defer allocator.free(result);
     // must be a square
     std.debug.assert(grid.len == w * w);
 
-    var accesible: usize = 0;
-    for (0.., grid) |pos, tile| {
-        if (tile != '@')
-            continue;
-
-        const x = pos % w;
-
-        const y = @divFloor(pos, w);
-
-        var adjacent_rolls_of_paper: usize = 0;
-        for (directions) |offset| {
-            const new_x = @as(isize, @intCast(x)) + offset.@"0";
-            const new_y = @as(isize, @intCast(y)) + offset.@"1";
-
-            if (new_x < 0) continue;
-            if (new_x >= w) continue;
-            if (new_y < 0) continue;
-            if (new_y >= w) continue;
-
-            const new_pos: usize = @as(usize, @intCast(new_y)) * w + @as(usize, @intCast(new_x));
-            if (grid[new_pos] == '@')
-                adjacent_rolls_of_paper += 1;
-        }
-        if (adjacent_rolls_of_paper < 4) {
-            accesible += 1;
-        }
-    }
-    std.log.info("{d}", .{accesible});
+    std.log.info("{d}", .{executeProcess(w, grid, result)});
 }
 
 const directions = [_]struct { isize, isize }{
