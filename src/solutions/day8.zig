@@ -4,6 +4,7 @@ const Solution = @import("../main.zig").Solution;
 
 pub const solution: Solution = .{
     .part1Fn = part1,
+    .part2Fn = part2,
 };
 
 const Vec3D = @Vector(3, f32);
@@ -204,6 +205,135 @@ fn part1(allocator: std.mem.Allocator) !void {
 
         sum *= circuit.junction_boxes.items.len;
     }
+
+    std.log.info("{d}", .{sum});
+}
+
+fn part2(allocator: std.mem.Allocator) !void {
+    var handle = try std.fs.cwd().openFileZ("./inputs/day8.txt", .{ .mode = .read_only });
+    defer handle.close();
+    var buff: [512]u8 = undefined;
+    var in = handle.reader(&buff);
+    var boxes: JunctionBoxes = .init(allocator);
+
+    defer {
+        boxes.deinit();
+    }
+
+    while (true) {
+        const line = in.interface.takeDelimiterExclusive('\n') catch |err| {
+            switch (err) {
+                error.EndOfStream => break,
+                else => return err,
+            }
+        };
+        var it = std.mem.splitScalar(u8, line, ',');
+        const pos: Vec3D = .{
+            try std.fmt.parseFloat(f32, it.next().?),
+            try std.fmt.parseFloat(f32, it.next().?),
+            try std.fmt.parseFloat(f32, it.next().?),
+        };
+
+        std.debug.assert(it.rest().len == 0);
+
+        const box: JunctionBox = .{ .pos = pos };
+        try boxes.append(box);
+    }
+
+    var q: std.PriorityQueue([2]JunctionBox, void, compareFn) = .init(allocator, {});
+    defer q.deinit();
+
+    for (boxes.items) |from| {
+        for (boxes.items) |to| {
+            const d = from.dist(to);
+            if (d == 0) continue;
+            try q.add([_]JunctionBox{ from, to });
+        }
+    }
+
+    var circuits: Circuits = .init(allocator);
+    defer {
+        for (circuits.items) |c| c.deinit();
+        circuits.deinit();
+    }
+
+    var curr_sims: usize = 0;
+    const Result = union(enum) {
+        new,
+        ignore,
+        insert: struct { usize, JunctionBox },
+        merge: struct { usize, usize },
+    };
+
+    var last: [2]JunctionBox = undefined;
+    while (q.peek() != null) {
+        const from, const to = q.remove();
+
+        _ = q.remove();
+
+        var result: Result = .new;
+        r: for (0.., circuits.items) |i, c| {
+            if (c.contains(from)) {
+                // in itself; ignore
+                if (c.contains(to)) {
+                    result = .ignore;
+                    break :r;
+                }
+
+                for (0.., circuits.items) |j, c2| {
+                    if (i == j)
+                        continue;
+                    if (c2.contains(to)) {
+                        result = .{ .merge = .{ i, j } };
+                        break :r;
+                    }
+                }
+
+                result = .{ .insert = .{ i, to } };
+            } else if (c.contains(to)) {
+                for (0.., circuits.items) |j, c2| {
+                    if (i == j)
+                        continue;
+                    if (c2.contains(from)) {
+                        result = .{ .merge = .{ i, j } };
+                        break :r;
+                    }
+                }
+
+                result = .{ .insert = .{ i, from } };
+            }
+        }
+
+        if (result != .ignore) {
+            last[0] = from;
+            last[1] = to;
+        }
+
+        switch (result) {
+            .ignore => {},
+            .new => {
+                var c: Circuit = .init(allocator);
+                try c.junction_boxes.append(from);
+                try c.junction_boxes.append(to);
+                try circuits.append(c);
+            },
+            .insert => |insert| {
+                const idx, const box = insert;
+
+                try circuits.items[idx].junction_boxes.append(box);
+            },
+            .merge => |idxs| {
+                const i, const j = idxs;
+                const removed = circuits.swapRemove(j);
+                try circuits.items[i].junction_boxes.appendSlice(removed.junction_boxes.items);
+                removed.deinit();
+            },
+        }
+        curr_sims += 1;
+    }
+
+    // 170084350
+    const sum = last[0].pos[0] * last[1].pos[0];
 
     std.log.info("{d}", .{sum});
 }
