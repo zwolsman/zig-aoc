@@ -4,6 +4,7 @@ const Solution = @import("../main.zig").Solution;
 
 pub const solution: Solution = .{
     .part1Fn = part1,
+    .part2Fn = part2,
 };
 
 fn part1(allocator: std.mem.Allocator) !void {
@@ -17,8 +18,63 @@ fn part1(allocator: std.mem.Allocator) !void {
     var grid = try Grid.init(allocator, txt);
     defer grid.deinit();
 
-    while (try grid.tick()) {}
+    std.log.debug("{d} {d}", .{ grid.y, grid.max_y });
+
+    while (grid.y < grid.max_y) {
+        try grid.tick();
+    }
+
     std.log.info("{d}", .{grid.hit_splitters.count()});
+}
+
+fn part2(allocator: std.mem.Allocator) !void {
+    var handle = try std.fs.cwd().openFileZ("./inputs/day7.txt", .{ .mode = .read_only });
+    defer handle.close();
+
+    var in = handle.reader(&.{});
+    const txt = try in.interface.allocRemaining(allocator, .unlimited);
+    defer allocator.free(txt);
+
+    var grid = try Grid.init(allocator, txt);
+    defer grid.deinit();
+
+    while (grid.y < grid.max_y) {
+        try grid.tick();
+    }
+
+    var sum: usize = 0;
+    var it = grid.beams.iterator();
+    while (it.next()) |entry| {
+        if (entry.key_ptr.*.y != grid.max_y)
+            continue;
+        sum += entry.value_ptr.*;
+    }
+
+    // printGrid(&grid);
+
+    std.log.info("{d}", .{sum});
+}
+
+fn printGrid(grid: *const Grid) void {
+    for (0..grid.max_y) |y| {
+        for (0..grid.max_y) |x| {
+            const coord: Coordinate = .{ .x = x, .y = y };
+            if (grid.beams.get(coord)) |n| {
+                std.debug.print("{d:3}", .{n});
+            } else {
+                var is_splitter = false;
+                for (grid.splitters.items) |splitter| {
+                    if (std.meta.eql(splitter, coord)) {
+                        is_splitter = true;
+                        std.debug.print("  -", .{});
+                    }
+                }
+                if (!is_splitter)
+                    std.debug.print("{d:3}", .{0});
+            }
+        }
+        std.debug.print("\n", .{});
+    }
 }
 
 const Direction = enum {
@@ -61,11 +117,13 @@ const Coordinate = struct {
 
 const Grid = struct {
     const BEAM_DIR = Direction.down;
+    const Beams = std.AutoHashMap(Coordinate, usize);
 
-    beams: std.AutoHashMap(Coordinate, bool),
+    beams: Beams,
     splitters: std.array_list.Managed(Coordinate),
     hit_splitters: std.AutoHashMap(Coordinate, void),
     max_y: usize,
+    y: usize = 0,
 
     pub fn init(allocator: std.mem.Allocator, raw_grid: []u8) !Grid {
         var line_it = std.mem.tokenizeScalar(u8, raw_grid, '\n');
@@ -80,7 +138,7 @@ const Grid = struct {
             for (0.., line) |x, c| {
                 switch (c) {
                     'S' => {
-                        try grid.beams.putNoClobber(.{ .x = x, .y = y }, true);
+                        try grid.beams.putNoClobber(.{ .x = x, .y = y }, 1);
                     },
                     '^' => {
                         try grid.splitters.append(.{ .x = x, .y = y });
@@ -95,22 +153,19 @@ const Grid = struct {
         }
 
         grid.max_y = y;
+        grid.y = 0;
 
         return grid;
     }
 
-    pub fn tick(self: *Grid) !bool {
-        var did_tick = false;
-
+    pub fn tick(self: *Grid) !void {
         var clone = try self.beams.clone();
         defer clone.deinit();
         var it = clone.iterator();
         while (it.next()) |entry| beam: {
-            if (!entry.value_ptr.*)
+            if (entry.key_ptr.*.y != self.y)
                 continue;
-            try self.beams.put(entry.key_ptr.*, false);
 
-            did_tick = true;
             const next_beam_pos = entry.key_ptr.plus(BEAM_DIR);
             if (next_beam_pos.y > self.max_y) {
                 continue;
@@ -123,19 +178,26 @@ const Grid = struct {
                         try self.hit_splitters.put(splitter, {});
 
                         const e = try self.beams.getOrPut(s);
-                        if (e.found_existing) continue;
-
-                        e.value_ptr.* = true;
+                        if (e.found_existing) {
+                            e.value_ptr.* = e.value_ptr.* + entry.value_ptr.*;
+                        } else {
+                            e.value_ptr.* = entry.value_ptr.*;
+                        }
                     }
 
                     break :beam;
                 }
             }
 
-            try self.beams.put(next_beam_pos, true);
+            const result = try self.beams.getOrPut(next_beam_pos);
+            if (result.found_existing) {
+                result.value_ptr.* = result.value_ptr.* + entry.value_ptr.*;
+            } else {
+                result.value_ptr.* = entry.value_ptr.*;
+            }
         }
 
-        return did_tick;
+        self.y += 1;
     }
 
     fn split(splitter: Coordinate) [2]Coordinate {
