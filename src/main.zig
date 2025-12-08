@@ -51,6 +51,7 @@ const solutions = [_]Solution{
     @import("solutions/day4.zig").solution,
     @import("solutions/day5.zig").solution,
     @import("solutions/day6.zig").solution,
+    @import("solutions/day7.zig").solution,
 };
 
 pub fn main() !void {
