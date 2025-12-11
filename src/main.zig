@@ -1,6 +1,14 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 const flags = @import("flags");
+
+pub const default_level: std.log.Level = switch (builtin.mode) {
+    .Debug => .debug,
+    .ReleaseSafe => .notice,
+    .ReleaseFast => .info,
+    .ReleaseSmall => .err,
+};
 
 pub const Solution = struct {
     part1Fn: ?*const fn (std.mem.Allocator) anyerror!void = null,
@@ -54,6 +62,7 @@ const solutions = [_]Solution{
     @import("solutions/day7.zig").solution,
     @import("solutions/day8.zig").solution,
     @import("solutions/day9.zig").solution,
+    @import("solutions/day10.zig").solution,
 };
 
 pub fn main() !void {
