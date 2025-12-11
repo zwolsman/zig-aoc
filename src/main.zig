@@ -63,6 +63,7 @@ const solutions = [_]Solution{
     @import("solutions/day8.zig").solution,
     @import("solutions/day9.zig").solution,
     @import("solutions/day10.zig").solution,
+    @import("solutions/day11.zig").solution,
 };
 
 pub fn main() !void {
@@ -87,7 +88,7 @@ pub fn main() !void {
         solutions[day - 1].run(allocator);
     } else {
         for (0.., solutions) |day, s| {
-            std.log.debug("Running day {d}", .{day + 1});
+            std.log.info("Running day {d}", .{day + 1});
             s.run(allocator);
         }
     }
