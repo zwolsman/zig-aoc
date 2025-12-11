@@ -65,7 +65,7 @@ fn part1(allocator: std.mem.Allocator) !void {
 fn runButtons(allocator: std.mem.Allocator, target: usize, buttons: []usize) !usize {
     const Item = struct { usize, usize };
 
-    var q: std.array_list.Managed(Item) = try .initCapacity(allocator, 1024);
+    var q: std.array_list.Managed(Item) = .init(allocator);
     defer q.deinit();
 
     var visited: std.AutoHashMap(usize, void) = .init(allocator);
@@ -75,8 +75,6 @@ fn runButtons(allocator: std.mem.Allocator, target: usize, buttons: []usize) !us
 
     while (q.items.len > 0) {
         const level, const state = q.orderedRemove(0);
-        try visited.put(state, {});
-
         const diff = state ^ target;
 
         for (buttons) |btn| {
@@ -87,7 +85,11 @@ fn runButtons(allocator: std.mem.Allocator, target: usize, buttons: []usize) !us
             if (next_state == target) return level + 1;
 
             if (visited.contains(next_state)) continue;
-            try q.append(.{ level + 1, next_state });
+            const result = try visited.getOrPut(next_state);
+            if (result.found_existing)
+                continue
+            else
+                try q.append(.{ level + 1, next_state });
         }
     }
 
